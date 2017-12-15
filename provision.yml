@@ -1,0 +1,21 @@
+---
+- hosts: YOUR_HOSTS_SETTING
+  user: root
+  become: true
+  become_user: root
+  become_method: sudo
+  vars:
+    username: YOUR_SERVER_ACCOUNT
+    password: YOUR_SERVER_PASSWORD
+    public_key: YOUR_LOCAL_PUBLIC_KEY   # ~/.ssh/id_rsa.pub
+    sudoers:
+      - YOUR_SERVER_ACCOUNT
+  roles: 
+    - common
+    - user
+    - wheel
+    - ohmyzsh
+    - timezone
+    - ufw
+    - ssh
+    - python
