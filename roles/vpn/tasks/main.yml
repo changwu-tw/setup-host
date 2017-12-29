@@ -82,7 +82,7 @@
 
 - name: Restart xl2tpd
   service:
-    name: {{ item }}
+    name: "{{ item }}"
     state: restarted
   with_items:
     - ipsec
