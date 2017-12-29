@@ -1,19 +1,15 @@
 ---
-- name: Install strongswan, xl2tpd, ppp, lsof
+- name: Install openswan, xl2tpd, ppp, lsof
   apt:
     name: "{{ item }}"
     state: present
     update_cache: yes
     cache_valid_time: 86400
   with_items:
-    - strongswan
+    - openswan
     - xl2tpd
     - ppp
     - lsof
-
-- name: Set up iptable routing
-  command: 
-    /sbin/iptables -t nat -A POSTROUTING -j SNAT --to-source {{ ansible_default_ipv4["address"] }} -o {{ ansible_default_ipv4["interface"] }}
 
 - name: Set sysctl.conf
   lineinfile: 
@@ -29,16 +25,16 @@
     - "net.ipv4.conf.default.send_redirects = 0"
     - "net.ipv4.icmp_ignore_bogus_error_responses = 1"
 
-- name: Set rc.local
-  lineinfile: 
-    dest: /etc/rc.local
-    regexp: '^# By default this script does nothing.'
-    insertafter: '^# By default this script does nothing.'
-    line: "for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects; echo 0 > $vpn/send_redirects; done"
-    backup: yes
-
 - name: Apply sysctl changes
   command: /sbin/sysctl -p
+
+- name: Set rc.local
+  template: 
+    src: rc.local.j2
+    dest: /etc/rc.local
+    owner: root
+    group: root
+    mode: 0644
 
 - name: Setup IPSec config file
   template: 
@@ -80,10 +76,11 @@
     group: root
     mode: 0600
 
-- name: Restart xl2tpd
+- name: Restart pppd-dns, xl2tpd, ipsec
   service:
     name: "{{ item }}"
     state: restarted
   with_items:
-    - ipsec
+    - pppd-dns
     - xl2tpd
+    - ipsec
