@@ -1,0 +1,92 @@
+---
+vars:
+  ipsec_psk: "{{ lookup('file', 'ipsec.psk') }}"
+tasks:
+
+- name: Install OpenSWAN, xl2tpd, ppp, lsof
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 86400
+  with_items:
+    - openswan
+    - xl2tpd
+    - ppp
+    - lsof
+
+- name: Set up iptable routing
+  command: 
+    /sbin/iptables -t nat -A POSTROUTING -j SNAT --to-source {{ ansible_default_ipv4["address"] }} -o {{ ansible_default_ipv4["interface"] }}
+
+- name: Set sysctl.conf
+  lineinfile: dest=/etc/sysctl.conf line="{{ item }}" backup=yes
+  with_items:
+    - "net.ipv4.ip_forward = 1"
+    - "net.ipv4.conf.all.accept_redirects = 0"
+    - "net.ipv4.conf.all.send_redirects = 0"
+    - "net.ipv4.conf.default.rp_filter = 0"
+    - "net.ipv4.conf.default.accept_source_route = 0"
+    - "net.ipv4.conf.default.send_redirects = 0"
+    - "net.ipv4.icmp_ignore_bogus_error_responses = 1"
+
+- name: Set accept_redirects to 0 on all network interfaces
+  shell: /bin/echo 0 > {{ item }}
+  with_fileglob:
+    - /proc/sys/net/ipv4/conf/*/accept_redirects
+
+- name: Set send_redirects to 0 on all network interfaces
+  shell: /bin/echo 0 > {{ item }}
+  with_fileglob:
+    - /proc/sys/net/ipv4/conf/*/send_redirects
+
+- name: Apply sysctl changes
+  command: /sbin/sysctl -p
+
+- name: Setup IPSec config file
+  template: 
+    src: ipsec.conf.j2
+    dest: /etc/ipsec.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Setup IPsec shared secret
+  template: 
+    src: ipsec.secrets.j2
+    dest: /etc/ipsec.secrets
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Setup xl2ptd
+  template: 
+    src: xl2tpd.conf.j2
+    dest: /etc/xl2tpd/xl2tpd.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Setup xl2tpd options
+  template:
+    src: options.xl2tpd.j2
+    dest: /etc/ppp/options.xl2tpd
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Setup chap-secrets
+  template:
+    src: chap-secrets.j2
+    dest: /etc/ppp/chap-secrets
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Restart services
+  service:
+    name: {{ item }}
+    state: restarted
+  with_items:
+    - ipsec
+    - xl2tpd
