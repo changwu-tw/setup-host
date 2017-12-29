@@ -1,3 +1,5 @@
 .vscode/*
 *.retry
 hosts
+chap-secrets.j2
+ipsec.psk
