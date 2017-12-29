@@ -3,7 +3,7 @@
 ohmyzsh_users:
   - username: "{{ username }}"
     usergroup: wheel
-    home: /home/"{{ username }}""
+    home: "/home/{{ username }}"
   - username: root
     usergroup: root
     home: /root
