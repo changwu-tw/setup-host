@@ -20,6 +20,8 @@ Once you have installed Ansible, you can setup a host with:
 4. Basic firewall
 5. Timezone setting
 6. python dev environment
+7. onmyzsh setting
+8. l2tp IPSec VPN (only for Ubuntu 14.04)
 
 ## Set variables
 
