@@ -1,15 +1,16 @@
 ---
-- hosts: YOUR_HOSTS_SETTING
+- hosts: [HOSTS]
   user: root
   become: true
   become_user: root
   become_method: sudo
   vars:
-    username: YOUR_SERVER_ACCOUNT
-    password: YOUR_SERVER_PASSWORD
-    public_key: YOUR_LOCAL_PUBLIC_KEY   # ~/.ssh/id_rsa.pub
+    username: [USER_ACCOUNT]
+    password: [USER_PASSWORD]
+    public_key: [PUBKEY_FOR_SSH_LOGIN]
     sudoers:
-      - YOUR_SERVER_ACCOUNT
+      - [USER_ACCOUNT]
+    ipsec_psk: "{{ lookup('file', 'ipsec.psk') }}"
   roles: 
     - common
     - user
@@ -19,3 +20,4 @@
     - ufw
     - ssh
     - python
+    - vpn
